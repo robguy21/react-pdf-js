@@ -17,6 +17,7 @@ export default class ReactPdfJs extends Component {
     cMapUrl: PropTypes.string,
     cMapPacked: PropTypes.bool,
     className: PropTypes.string,
+    containerRef: PropTypes.elementType,
   }
 
   static defaultProps = {
@@ -25,6 +26,7 @@ export default class ReactPdfJs extends Component {
     scale: 1,
     cMapUrl: '../node_modules/pdfjs-dist/cmaps/',
     cMapPacked: false,
+    containerRef: {},
   }
 
   state = {
@@ -52,6 +54,7 @@ export default class ReactPdfJs extends Component {
   componentWillReceiveProps(newProps) {
     const { page, scale } = this.props;
     const { pdf } = this.state;
+
     if (newProps.page !== page) {
       pdf.getPage(newProps.page).then(p => this.drawPDF(p));
     }
@@ -60,8 +63,42 @@ export default class ReactPdfJs extends Component {
     }
   }
 
+  getMaxScale = (page) => {
+    const viewport = page.getViewport(1);
+    const container = this.props.containerRef.current;
+
+    const sizes = {
+      container: {
+        width: container.offsetWidth,
+        height: container.clientHeight,
+      },
+      canvas: {
+        width:viewport.width,
+        height:viewport.height,
+      },
+    };
+
+    const viewportRatio = sizes.canvas.width / sizes.canvas.height;
+    const containerRatio = sizes.container.width / sizes.container.height;
+
+    let requiredScale = 1;
+
+    if (viewportRatio > containerRatio) {
+      // canvas is wider than container -> scale according to width
+      requiredScale = (sizes.container.width / sizes.canvas.width);
+    } else {
+      // container is wider than cavas -> scale according to height
+      requiredScale = (sizes.container.height / sizes.canvas.height);
+    }
+
+    return requiredScale;
+  }
+
   drawPDF = (page) => {
-    const { scale } = this.props;
+    let { scale } = this.props;
+    if (this.props.containerRef.current) {
+      scale = this.getMaxScale(page);
+    }
     const viewport = page.getViewport(scale);
     const { canvas } = this;
     const canvasContext = canvas.getContext('2d');
