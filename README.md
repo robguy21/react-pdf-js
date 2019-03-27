@@ -3,6 +3,7 @@
 `react-pdf-js` provides a component for rendering PDF documents using [PDF.js](http://mozilla.github.io/pdf.js/). Written for React 15/16 and ES2015 using the Airbnb style guide.
 
 ---
+
 [![NPM Version](https://img.shields.io/npm/v/react-pdf-js.svg?style=flat-square)](https://www.npmjs.com/package/react-pdf-js)
 [![NPM Downloads](https://img.shields.io/npm/dm/react-pdf-js.svg?style=flat-square)](https://www.npmjs.com/package/react-pdf-js)
 [![Build Status](https://img.shields.io/travis/mikecousins/react-pdf-js/master.svg?style=flat-square)](https://travis-ci.org/mikecousins/react-pdf-js)
@@ -68,6 +69,7 @@ class MyPdfViewer extends React.Component {
           file="test.pdf"
           onDocumentComplete={this.onDocumentComplete}
           page={this.state.page}
+          {/* pass in a containerRef prop which is a react ref for the pdf to scale into the container  */}
         />
         {pagination}
       </div>
