@@ -1,3 +1,5 @@
+/* eslint-disable react/forbid-prop-types */
+
 /**
  * @class ReactPdfJs
  */
@@ -17,7 +19,7 @@ export default class ReactPdfJs extends Component {
     cMapUrl: PropTypes.string,
     cMapPacked: PropTypes.bool,
     className: PropTypes.string,
-    containerRef: PropTypes.elementType,
+    containerRef: PropTypes.object,
   }
 
   static defaultProps = {
@@ -26,12 +28,15 @@ export default class ReactPdfJs extends Component {
     scale: 1,
     cMapUrl: '../node_modules/pdfjs-dist/cmaps/',
     cMapPacked: false,
-    containerRef: {},
+    className: '',
+    containerRef: null,
   }
 
   state = {
     pdf: null,
   };
+
+  PDFDocumentLoadingTask = null;
 
   componentDidMount() {
     const {
@@ -42,12 +47,16 @@ export default class ReactPdfJs extends Component {
       cMapPacked,
     } = this.props;
     PdfJsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.0.943/pdf.worker.js';
-    PdfJsLib.getDocument({ url: file, cMapUrl, cMapPacked }).then((pdf) => {
+    this.PDFDocumentLoadingTask = PdfJsLib.getDocument({ url: file, cMapUrl, cMapPacked });
+    this.PDFDocumentLoadingTask.then((pdf) => {
       this.setState({ pdf });
       if (onDocumentComplete) {
         onDocumentComplete(pdf._pdfInfo.numPages); // eslint-disable-line
       }
       pdf.getPage(page).then(p => this.drawPDF(p));
+    },
+    () => {
+      console.warn('Did not complete PDF Load');
     });
   }
 
@@ -63,9 +72,12 @@ export default class ReactPdfJs extends Component {
     }
   }
 
-  getMaxScale = (page) => {
+  componentWillUnmount() {
+    if (this.PDFDocumentLoadingTask) this.PDFDocumentLoadingTask.destroy();
+  }
+
+  getMaxScale = (page, container) => {
     const viewport = page.getViewport(1);
-    const container = this.props.containerRef.current;
 
     const sizes = {
       container: {
@@ -73,8 +85,8 @@ export default class ReactPdfJs extends Component {
         height: container.clientHeight,
       },
       canvas: {
-        width:viewport.width,
-        height:viewport.height,
+        width: viewport.width,
+        height: viewport.height,
       },
     };
 
@@ -95,15 +107,14 @@ export default class ReactPdfJs extends Component {
   }
 
   drawPDF = (page) => {
+    if (!this.canvas) return;
+    const { containerRef } = this.props;
     let { scale } = this.props;
-    if (this.props.containerRef.current) {
-      scale = this.getMaxScale(page);
+    if (containerRef) {
+      scale = this.getMaxScale(page, containerRef);
     }
     const viewport = page.getViewport(scale);
     const { canvas } = this;
-    if (!canvas) {
-      return;
-    }
     const canvasContext = canvas.getContext('2d');
     canvas.height = viewport.height;
     canvas.width = viewport.width;
