@@ -101,6 +101,9 @@ export default class ReactPdfJs extends Component {
     }
     const viewport = page.getViewport(scale);
     const { canvas } = this;
+    if (!canvas) {
+      return;
+    }
     const canvasContext = canvas.getContext('2d');
     canvas.height = viewport.height;
     canvas.width = viewport.width;
