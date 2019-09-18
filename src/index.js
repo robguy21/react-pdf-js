@@ -53,29 +53,30 @@ export default class ReactPdfJs extends Component {
       if (onDocumentComplete) {
         onDocumentComplete(pdf._pdfInfo.numPages); // eslint-disable-line
       }
-      pdf.getPage(page).then(p => this.drawPDF(p), () => {
-        console.warn('Did not draw PDF');
-      });
+      pdf.getPage(page).then(p => this.drawPDF(p), this.onDrawError);
     },
-    () => {
-      console.warn('Did not complete PDF Load');
-    });
+    this.onLoadError);
   }
 
   componentWillReceiveProps(newProps) {
     const { page, scale } = this.props;
     const { pdf } = this.state;
 
-    if (newProps.page !== page) {
-      pdf.getPage(newProps.page).then(p => this.drawPDF(p));
-    }
-    if (newProps.scale !== scale) {
-      pdf.getPage(newProps.page).then(p => this.drawPDF(p));
+    if (newProps.page !== page || newProps.scale !== scale) {
+      pdf.getPage(newProps.page).then(p => this.drawPDF(p), this.onDrawError);
     }
   }
 
   componentWillUnmount() {
     if (this.PDFDocumentLoadingTask) this.PDFDocumentLoadingTask.destroy();
+  }
+
+  onLoadError = () => {
+    console.warn('Did not complete PDF Load');
+  }
+
+  onDrawError = () => {
+    console.warn('Did not draw PDF');
   }
 
   getMaxScale = (page, container) => {
