@@ -71,12 +71,12 @@ export default class ReactPdfJs extends Component {
     if (this.PDFDocumentLoadingTask) this.PDFDocumentLoadingTask.destroy();
   }
 
-  onLoadError = () => {
-    console.warn('Did not complete PDF Load');
+  onLoadError = (e) => {
+    throw new Error(`Failed to Load PDF: ${e.message}`);
   }
 
-  onDrawError = () => {
-    console.warn('Did not draw PDF');
+  onDrawError = (e) => {
+    throw new Error(`Failed to Draw PDF: ${e.message}`);
   }
 
   getMaxScale = (page, container) => {
